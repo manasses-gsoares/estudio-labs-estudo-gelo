@@ -568,8 +568,6 @@ function lancar(ev, doUsuario = true) {
   const meio = conjurador.position.clone().lerp(p, 0.55).setY(0.7);
   const raioEfeito = modo.tipo === 'lanca' ? 3.1 : 4.0;
   ajustaEnquadramento(meio, raioEfeito);
-  dica.classList.add('some');
-  setTimeout(() => dica.remove(), 900);
 }
 
 // ---------------------------------------------------------------- controles de UI
@@ -584,6 +582,7 @@ botoes.coroa.addEventListener('click', () => escolhe('coroa'));
 document.querySelector('#bt-limpar').addEventListener('click', () => {
   for (const e of efeitos) e.remover();
   efeitos.length = 0;
+  if (dica) dica.classList.remove('some');
   iniciaDemo();
 });
 
