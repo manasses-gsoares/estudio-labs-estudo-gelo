@@ -47,8 +47,8 @@ const chaoMat = new THREE.ShaderMaterial({
       float pedra = ruido(vW.xz * 1.4) * 0.5 + ruido(vW.xz * 4.1) * 0.3 + ruido(vW.xz * 11.0) * 0.2;
       vec3 base = mix(vec3(0.018,0.030,0.052), vec3(0.030,0.048,0.075), pedra);
       base *= 0.7 + 0.85 * perto;
-      float poco = exp(-pow(r / 7.5, 2.0));
-      base += vec3(0.035, 0.075, 0.115) * poco;
+      float poco = exp(-pow(r / 9.0, 2.0));
+      base += vec3(0.020, 0.048, 0.075) * poco;
       gl_FragColor = vec4(base, 1.0);
     }`
 });
