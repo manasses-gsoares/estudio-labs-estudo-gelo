@@ -475,11 +475,22 @@ class CoroaDeGelo {
 }
 
 // ---------------------------------------------------------------- câmera (órbita própria)
-const orbita = { theta: 0.34, phi: 0.80, raio: 9.2, alvo: new THREE.Vector3(0.9, 0.35, -0.5) };
+const orbita = { theta: 0.34, phi: 0.92, raio: 9.2, alvo: new THREE.Vector3(0.9, 0.35, -0.5) };
+const enquadramento = { alvo: orbita.alvo.clone(), raio: 9.2, ativo: true };
+let usuarioMexeu = false;
+function ajustaEnquadramento(centro, raioAltura) {
+  // enquadra pela ALTURA do efeito (a profundidade da torrente lê como perspectiva,
+  // não como tamanho), então o mesmo efeito tem o mesmo peso no celular e no desktop
+  const fovV = THREE.MathUtils.degToRad(camera.fov);
+  enquadramento.alvo.copy(centro);
+  enquadramento.raio = limitar(raioAltura / Math.sin(fovV / 2) * 1.02, 5.0, 15.0);
+  enquadramento.ativo = true; usuarioMexeu = false;
+}
 function enquadra() {
   const a = innerWidth / Math.max(innerHeight, 1);
-  orbita.raio = a < 0.75 ? 13.2 : a < 1.15 ? 11.0 : 9.2;
-  orbita.alvo.set(a < 0.75 ? 1.0 : 0.9, a < 0.75 ? 0.45 : 0.35, a < 0.75 ? -0.7 : -0.5);
+  ajustaEnquadramento(new THREE.Vector3(1.2, 0.65, -0.6), 3.1);
+  orbita.alvo.copy(enquadramento.alvo);
+  orbita.raio = enquadramento.raio;
   posicionaCamera();
 }
 function posicionaCamera() {
@@ -521,6 +532,7 @@ canvas.addEventListener('pointermove', (ev) => {
     const dx = ev.clientX - antes.x, dy = ev.clientY - antes.y;
     if (Math.hypot(ev.clientX - inicioX, ev.clientY - inicioY) > 7) arrastou = true;
     if (arrastou) {
+      usuarioMexeu = true;
       orbita.theta -= dx * 0.006;
       orbita.phi = limitar(orbita.phi - dy * 0.005, 0.28, 1.45);
       posicionaCamera();
@@ -528,7 +540,7 @@ canvas.addEventListener('pointermove', (ev) => {
   } else if (ponteiros.size === 2) {
     const [a, b] = [...ponteiros.values()];
     const d = Math.hypot(a.x - b.x, a.y - b.y);
-    if (ultimaPinch) { orbita.raio = limitar(orbita.raio * (ultimaPinch / d), 4.5, 20); posicionaCamera(); }
+    if (ultimaPinch) { usuarioMexeu = true; orbita.raio = limitar(orbita.raio * (ultimaPinch / d), 4.5, 26); posicionaCamera(); }
     ultimaPinch = d; arrastou = true;
   }
 });
@@ -540,7 +552,7 @@ function solta(ev) {
 }
 canvas.addEventListener('pointerup', solta);
 canvas.addEventListener('pointercancel', (ev) => { ponteiros.delete(ev.pointerId); ultimaPinch = 0; });
-canvas.addEventListener('wheel', (ev) => { ev.preventDefault(); orbita.raio = limitar(orbita.raio + ev.deltaY * 0.006, 4.5, 20); posicionaCamera(); }, { passive: false });
+canvas.addEventListener('wheel', (ev) => { ev.preventDefault(); usuarioMexeu = true; orbita.raio = limitar(orbita.raio + ev.deltaY * 0.006, 4.5, 26); posicionaCamera(); }, { passive: false });
 
 function lancar(ev) {
   const p = pontoNoChao(ev);
@@ -550,6 +562,9 @@ function lancar(ev) {
   if (dist < 1.6) return;
   const efeito = modo.tipo === 'lanca' ? new TorrenteDeGelo(p) : new CoroaDeGelo(p);
   efeitos.push(efeito);
+  const meio = conjurador.position.clone().add(p).multiplyScalar(0.5).setY(0.6);
+  const raioEfeito = modo.tipo === 'lanca' ? 3.1 : 4.0;
+  ajustaEnquadramento(meio, raioEfeito);
   dica.classList.add('some');
   setTimeout(() => dica.remove(), 900);
 }
@@ -578,6 +593,12 @@ function quadro() {
   orbeMat.uniforms.uTempo.value = t;
   anelMat.uniforms.uTempo.value = t;
   flocos.uniforms.uTempo.value = t;
+  if (enquadramento.ativo && !usuarioMexeu) {
+    const k = 1 - Math.pow(0.001, dt);
+    orbita.alvo.lerp(enquadramento.alvo, k);
+    orbita.raio += (enquadramento.raio - orbita.raio) * k;
+    posicionaCamera();
+  }
   orbe.position.y = 1.0 + Math.sin(t * 1.6) * 0.05;
   orbe.rotation.y += dt * 0.6;
   for (let i = efeitos.length - 1; i >= 0; i--) {
@@ -597,6 +618,7 @@ quadro();
 setTimeout(() => {
   const alvo = new THREE.Vector3(3.2, 0, -3.0);
   efeitos.push(new TorrenteDeGelo(alvo));
+  ajustaEnquadramento(conjurador.position.clone().add(alvo).multiplyScalar(0.5).setY(0.65), 3.1);
   dica.classList.add('some');
 }, 900);
 
