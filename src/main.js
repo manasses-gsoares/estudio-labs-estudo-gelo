@@ -286,7 +286,7 @@ class TorrenteDeGelo {
       giro[i * 3 + 1] = entre(-Math.PI, Math.PI);
       giro[i * 3 + 2] = entre(0.05, 0.30) * (aleatorio() < 0.5 ? -1 : 1);
       this.itens.push({ i, u, atraso: u * this.duracao * 0.92,
-        altura: (0.55 + Math.pow(u, 0.7) * 1.85) * entre(0.75, 1.25), largura });
+        altura: (0.75 + Math.pow(u, 0.7) * 2.25) * entre(0.8, 1.25), largura });
     }
     cena.add(this.malha);
 
@@ -330,7 +330,7 @@ class TorrenteDeGelo {
       const u = entre(0.05, 0.98);
       m.position.copy(origem).addScaledVector(this.dir, dist * u).addScaledVector(this.perp, entre(-0.8, 0.8));
       m.position.y = entre(0.12, 0.45);
-      const tam = entre(1.1, 2.4);
+      const tam = entre(1.0, 2.0);
       m.scale.set(tam, tam * 0.7, 1);
       m.userData = { u, fase: entre(0, 6.28), subida: entre(0.12, 0.32), tam };
       cena.add(m); this.nevoas.push(m);
@@ -364,7 +364,7 @@ class TorrenteDeGelo {
       m.position.y = 0.12 + u.subida * Math.min(this.tempo, 4) + Math.sin(t * 0.6 + u.fase) * 0.05;
       m.scale.setScalar(u.tam * (0.85 + aparece * 0.3));
       m.quaternion.copy(camera.quaternion);
-      m.material.uniforms.uAlpha.value = aparece * 0.75 * apagar;
+      m.material.uniforms.uAlpha.value = aparece * 0.5 * apagar;
       m.material.uniforms.uTempo.value = t;
       m.visible = m.material.uniforms.uAlpha.value > 0.01;
     }
