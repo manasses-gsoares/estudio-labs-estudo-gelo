@@ -566,7 +566,7 @@ function lancar(ev, doUsuario = true) {
   efeitos.push(efeito);
   if (doUsuario) { paraDemo(); if (dica) dica.classList.add('some'); }
   const meio = conjurador.position.clone().lerp(p, 0.55).setY(0.7);
-  const raioEfeito = modo.tipo === 'lanca' ? 3.1 : 4.0;
+  const raioEfeito = modo.tipo === 'lanca' ? 3.7 : 4.4;
   ajustaEnquadramento(meio, raioEfeito);
 }
 
