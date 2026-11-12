@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070d18">
+<title>Estúdio Labs — estudo de gelo</title>
+<style>
+  :root { --gelo:#9fe8ff; --gelo2:#d8f6ff; --fundo:#070d18; --suave:#8fa8c8; }
+  * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; overflow:hidden; background:var(--fundo); color:#eaf6ff;
+    font:15px/1.45 -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    overscroll-behavior:none; touch-action:none; user-select:none; }
+  canvas { display:block; position:fixed; inset:0; width:100%; height:100%; }
+
+  .topo { position:fixed; top:max(14px, env(safe-area-inset-top)); left:16px; z-index:5; pointer-events:none; }
+  .topo b { font-size:13.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--gelo2); font-weight:600; }
+  .topo span { display:block; font-size:12px; color:var(--suave); margin-top:3px; }
+
+  .dica { position:fixed; left:50%; transform:translateX(-50%); top:50%; margin-top:56px; z-index:5;
+    font-size:13.5px; color:var(--gelo2); letter-spacing:.02em; text-align:center; pointer-events:none;
+    background:rgba(7,13,24,.55); border:1px solid rgba(159,232,255,.28); border-radius:999px; padding:7px 16px;
+    backdrop-filter:blur(6px); transition:opacity .5s ease; }
+  .dica.some { opacity:0; }
+
+  .barra { position:fixed; left:0; right:0; bottom:0; z-index:6; padding:12px 14px calc(12px + env(safe-area-inset-bottom));
+    display:flex; gap:8px; justify-content:center; flex-wrap:wrap;
+    background:linear-gradient(to top, rgba(4,8,15,.92), rgba(4,8,15,0)); }
+  button { appearance:none; border:1px solid rgba(159,232,255,.35); background:rgba(12,24,42,.82); color:var(--gelo2);
+    border-radius:999px; padding:11px 18px; font-size:14px; font-weight:600; letter-spacing:.01em; cursor:pointer;
+    backdrop-filter:blur(8px); transition:background .18s ease, border-color .18s ease, transform .12s ease; }
+  button.ativo { background:rgba(159,232,255,.16); border-color:var(--gelo); box-shadow:0 0 22px rgba(159,232,255,.22) inset; }
+  button:active { transform:scale(.97); }
+  .rodape { position:fixed; right:14px; bottom:calc(78px + env(safe-area-inset-bottom)); z-index:5; font-size:11.5px;
+    color:#5f7794; text-align:right; pointer-events:none; }
+  @media (max-width: 520px) {
+    .rodape { display:none; }
+    .barra { gap:6px; padding:10px 10px calc(10px + env(safe-area-inset-bottom)); }
+    button { padding:10px 14px; font-size:13px; }
+    .dica { font-size:12.5px; margin-top:44px; }
+  }
+</style>
+</head>
+<body>
+<canvas id="cena"></canvas>
+
+<div class="topo">
+  <b>Estúdio Labs</b>
+  <span>estudo de gelo · feito por código</span>
+</div>
+
+<div class="dica" id="dica">toque no chão para lançar</div>
+
+<div class="barra">
+  <button id="bt-lanca" class="ativo">Torrente de gelo</button>
+  <button id="bt-coroa">Coroa de gelo</button>
+  <button id="bt-limpar">Limpar</button>
+</div>
+<div class="rodape">arraste para girar · pinça para aproximar</div>
+
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js" } }
+</script>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
