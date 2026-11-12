@@ -562,7 +562,7 @@ function lancar(ev) {
   if (dist < 1.6) return;
   const efeito = modo.tipo === 'lanca' ? new TorrenteDeGelo(p) : new CoroaDeGelo(p);
   efeitos.push(efeito);
-  const meio = conjurador.position.clone().add(p).multiplyScalar(0.5).setY(0.6);
+  const meio = conjurador.position.clone().lerp(p, 0.55).setY(0.7);
   const raioEfeito = modo.tipo === 'lanca' ? 3.1 : 4.0;
   ajustaEnquadramento(meio, raioEfeito);
   dica.classList.add('some');
@@ -618,7 +618,7 @@ quadro();
 setTimeout(() => {
   const alvo = new THREE.Vector3(3.2, 0, -3.0);
   efeitos.push(new TorrenteDeGelo(alvo));
-  ajustaEnquadramento(conjurador.position.clone().add(alvo).multiplyScalar(0.5).setY(0.65), 3.1);
+  ajustaEnquadramento(conjurador.position.clone().lerp(alvo, 0.55).setY(0.7), 3.1);
   dica.classList.add('some');
 }, 900);
 
