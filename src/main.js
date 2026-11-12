@@ -426,10 +426,7 @@ class CoroaDeGelo {
         }`,
       transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending
     });
-    this.disco = new THREE.Mesh(new THREE.CircleGeometry(raio * 1.25, 64), this.discoMat);
-    this.disco.rotation.x = -Math.PI / 2;
-    this.disco.position.copy(this.centro).setY(0.014);
-    cena.add(this.disco);
+    // sem disco chapado no chão: a leitura do anel vem das próprias lâminas e da névoa
 
     this.nevoas = [];
     for (let i = 0; i < 10; i++) {
@@ -454,9 +451,6 @@ class CoroaDeGelo {
     geo.attributes.aEscala.needsUpdate = true;
     const p = limitar(this.tempo / 0.9, 0, 1);
     const apagar = this.tempo > this.vida ? limitar(1 - (this.tempo - this.vida) / 1.2, 0, 1) : 1;
-    this.discoMat.uniforms.uProgresso.value = p;
-    this.discoMat.uniforms.uAlpha.value = apagar;
-    this.discoMat.uniforms.uTempo.value = t;
     this.mat.uniforms.uTempo.value = t;
     this.mat.uniforms.uAlpha.value = apagar;
     for (const m of this.nevoas) {
@@ -472,9 +466,8 @@ class CoroaDeGelo {
   }
 
   remover() {
-    cena.remove(this.malha, this.disco);
+    cena.remove(this.malha);
     this.malha.geometry.dispose(); this.malha.material.dispose();
-    this.disco.geometry.dispose(); this.disco.material.dispose();
     for (const m of this.nevoas) { cena.remove(m); m.geometry.dispose(); m.material.dispose(); }
   }
 }
