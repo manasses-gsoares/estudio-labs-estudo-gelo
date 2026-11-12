@@ -5,6 +5,9 @@ import * as THREE from 'three';
    Torrente de gelo = frente de fratura que corre pelo chão e ergue cristais atrás dela.
    Coroa de gelo   = anel de lâminas que irrompe em sequência e congela um disco no chão. */
 
+window.__erros = [];
+addEventListener('error', (e) => window.__erros.push(String(e.message || e.error)));
+addEventListener('unhandledrejection', (e) => window.__erros.push('promise: ' + String(e.reason)));
 const canvas = document.querySelector('#cena');
 const dica = document.querySelector('#dica');
 
@@ -307,11 +310,11 @@ class TorrenteDeGelo {
           float veias = pow(1.0 - abs(n * 2.0 - 1.0), 7.0);
           float alcance = uProgresso + (n - 0.5) * 0.16;
           float revelado = 1.0 - smoothstep(alcance - 0.12, alcance, y);
-          revelado *= 1.0 - smoothstep(0.70, 1.0, y) * 0.85;
+          revelado *= 1.0 - smoothstep(0.55, 1.0, y) * 0.95;
           float nucleo = pow(lateral, 3.0) * (0.45 + n * 0.55);
-          float a = revelado * nucleo * (veias * 0.55 + n * 0.10) * uAlpha;
+          float a = revelado * nucleo * (veias * 0.42 + n * 0.05) * uAlpha * 0.75;
           float frente = exp(-pow((y - uProgresso) * 30.0, 2.0)) * (1.0 - smoothstep(0.90, 1.0, uProgresso));
-          vec3 cor = mix(vec3(0.16,0.34,0.52), vec3(0.72,0.92,1.0), veias * 0.85 + nucleo * 0.25);
+          vec3 cor = mix(vec3(0.22,0.45,0.66), vec3(0.80,0.95,1.0), veias * 0.9 + nucleo * 0.2);
           a += frente * nucleo * 0.30 * uAlpha;
           cor += vec3(0.6,0.88,1.0) * frente * 1.6;
           gl_FragColor = vec4(cor, clamp(a, 0.0, 0.8));
@@ -320,7 +323,7 @@ class TorrenteDeGelo {
     });
     this.faixa = new THREE.Mesh(geoFaixa.clone(), this.faixaMat);
     this.faixa.rotation.y = Math.atan2(this.dir.x, this.dir.z);
-    this.faixa.scale.set(1.95, 1, dist);
+    this.faixa.scale.set(1.15, 1, dist);
     this.faixa.position.copy(origem).setY(0.015);
     cena.add(this.faixa);
 
@@ -413,11 +416,13 @@ class CoroaDeGelo {
         uniform float uProgresso; uniform float uAlpha; uniform float uTempo; varying vec2 vUv;
         void main(){
           vec2 d = vUv - 0.5; float r = length(d) * 2.0;
-          float borda = 1.0 - smoothstep(0.80, 1.0, r);
-          float aneis = 0.5 + 0.5 * sin(r * 34.0 - uTempo * 1.2);
-          float a = borda * (0.10 + aneis * 0.14) * uProgresso * uAlpha;
-          float pulso = exp(-pow((r - uProgresso) * 5.0, 2.0)) * 0.3 * uAlpha;
-          gl_FragColor = vec4(vec3(0.72,0.93,1.0), clamp(a + pulso, 0.0, 1.0));
+          float borda = 1.0 - smoothstep(0.55, 1.0, r);
+          float aneis = 0.5 + 0.5 * sin(r * 26.0 - uTempo * 1.1);
+          float h = fract(sin(dot(floor(vUv * 60.0), vec2(12.9, 78.2))) * 43758.5);
+          float veios = pow(1.0 - abs(h * 2.0 - 1.0), 9.0);
+          float a = borda * (0.025 + aneis * 0.035 + veios * 0.30) * uProgresso * uAlpha;
+          float pulso = exp(-pow((r - uProgresso) * 5.0, 2.0)) * 0.18 * uAlpha;
+          gl_FragColor = vec4(vec3(0.78,0.94,1.0), clamp(a + pulso, 0.0, 0.85));
         }`,
       transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending
     });
@@ -516,7 +521,11 @@ function pontoNoChao(ev) {
   const ndc = new THREE.Vector2(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
   raycaster.setFromCamera(ndc, camera);
   const p = new THREE.Vector3();
-  return raycaster.ray.intersectPlane(planoChao, p) ? p : null;
+  if (raycaster.ray.intersectPlane(planoChao, p)) return p;
+  const d = raycaster.ray.direction.clone();
+  if (Math.abs(d.y) < 0.05) d.y = -0.2;
+  const k = camera.position.y / Math.max(-d.y, 0.05);
+  return camera.position.clone().addScaledVector(d, Math.min(Math.max(k, 6), 16)).setY(0);
 }
 
 canvas.addEventListener('pointerdown', (ev) => {
@@ -554,7 +563,7 @@ canvas.addEventListener('pointerup', solta);
 canvas.addEventListener('pointercancel', (ev) => { ponteiros.delete(ev.pointerId); ultimaPinch = 0; });
 canvas.addEventListener('wheel', (ev) => { ev.preventDefault(); usuarioMexeu = true; orbita.raio = limitar(orbita.raio + ev.deltaY * 0.006, 4.5, 26); posicionaCamera(); }, { passive: false });
 
-function lancar(ev) {
+function lancar(ev, doUsuario = true) {
   const p = pontoNoChao(ev);
   if (!p) return;
   p.x = limitar(p.x, -14, 14); p.z = limitar(p.z, -14, 14);
@@ -562,6 +571,7 @@ function lancar(ev) {
   if (dist < 1.6) return;
   const efeito = modo.tipo === 'lanca' ? new TorrenteDeGelo(p) : new CoroaDeGelo(p);
   efeitos.push(efeito);
+  if (doUsuario) { paraDemo(); if (dica) dica.classList.add('some'); }
   const meio = conjurador.position.clone().lerp(p, 0.55).setY(0.7);
   const raioEfeito = modo.tipo === 'lanca' ? 3.1 : 4.0;
   ajustaEnquadramento(meio, raioEfeito);
@@ -581,6 +591,7 @@ botoes.coroa.addEventListener('click', () => escolhe('coroa'));
 document.querySelector('#bt-limpar').addEventListener('click', () => {
   for (const e of efeitos) e.remover();
   efeitos.length = 0;
+  iniciaDemo();
 });
 
 // ---------------------------------------------------------------- laço
@@ -602,8 +613,11 @@ function quadro() {
   orbe.position.y = 1.0 + Math.sin(t * 1.6) * 0.05;
   orbe.rotation.y += dt * 0.6;
   for (let i = efeitos.length - 1; i >= 0; i--) {
-    if (!efeitos[i].atualizar(dt, t)) { efeitos[i].remover(); efeitos.splice(i, 1); }
+    try {
+      if (!efeitos[i].atualizar(dt, t)) { efeitos[i].remover(); efeitos.splice(i, 1); }
+    } catch (err) { window.__erros.push('atualizar: ' + (err && err.message)); efeitos.splice(i, 1); }
   }
+  window.__quadros = (window.__quadros || 0) + 1;
   renderer.render(cena, camera);
   requestAnimationFrame(quadro);
 }
@@ -614,17 +628,29 @@ addEventListener('resize', () => {
 });
 quadro();
 
-// primeira torrente automática para a página nunca abrir vazia
-setTimeout(() => {
-  const alvo = new THREE.Vector3(3.2, 0, -3.0);
-  efeitos.push(new TorrenteDeGelo(alvo));
-  ajustaEnquadramento(conjurador.position.clone().lerp(alvo, 0.55).setY(0.7), 3.1);
-  dica.classList.add('some');
-}, 900);
+// demonstração automática: a página mostra o efeito sozinha até a pessoa clicar
+let demoTimer = null, demoI = 0;
+const DEMO = [
+  { tipo: 'lanca', x: 3.2, z: -3.0 },
+  { tipo: 'coroa', x: -2.6, z: -2.2 },
+  { tipo: 'lanca', x: -3.4, z: -1.2 },
+  { tipo: 'coroa', x: 2.8, z: 0.6 }
+];
+function passoDemo() {
+  if (efeitos.length > 2) return;
+  const c = DEMO[demoI % DEMO.length]; demoI++;
+  const alvo = new THREE.Vector3(c.x, 0, c.z);
+  efeitos.push(c.tipo === 'lanca' ? new TorrenteDeGelo(alvo) : new CoroaDeGelo(alvo));
+  ajustaEnquadramento(conjurador.position.clone().lerp(alvo, 0.55).setY(0.7), c.tipo === 'lanca' ? 3.1 : 4.0);
+}
+function iniciaDemo() { if (!demoTimer) { passoDemo(); demoTimer = setInterval(passoDemo, 3400); } }
+function paraDemo() { if (demoTimer) { clearInterval(demoTimer); demoTimer = null; } }
+setTimeout(iniciaDemo, 700);
 
 window.__gelo = {
   efeitos,
   lancarTorrenteEm: (x, z) => efeitos.push(new TorrenteDeGelo(new THREE.Vector3(x, 0, z))),
+  erros: () => window.__erros, quadros: () => window.__quadros || 0,
   diag: () => ({
     janela: [innerWidth, innerHeight], raio: orbita.raio, alvo: orbita.alvo.toArray(),
     camera: camera.position.toArray().map(v => +v.toFixed(2)), fov: camera.fov,

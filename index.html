@@ -17,11 +17,13 @@
   .topo b { font-size:13.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--gelo2); font-weight:600; }
   .topo span { display:block; font-size:12px; color:var(--suave); margin-top:3px; }
 
-  .dica { position:fixed; left:50%; transform:translateX(-50%); top:22%; z-index:5;
+  .dica { position:fixed; left:50%; transform:translateX(-50%); top:72px; z-index:5;
     font-size:13.5px; color:var(--gelo2); letter-spacing:.02em; text-align:center; pointer-events:none;
     background:rgba(7,13,24,.55); border:1px solid rgba(159,232,255,.28); border-radius:999px; padding:7px 16px;
     backdrop-filter:blur(6px); transition:opacity .5s ease; }
   .dica.some { opacity:0; }
+  .dica { animation: pulsa 2.4s ease-in-out infinite; }
+  @keyframes pulsa { 0%,100% { box-shadow:0 0 0 0 rgba(159,232,255,.35); } 50% { box-shadow:0 0 0 10px rgba(159,232,255,0); } }
 
   .barra { position:fixed; left:0; right:0; bottom:0; z-index:6; padding:12px 14px calc(12px + env(safe-area-inset-bottom));
     display:flex; gap:8px; justify-content:center; flex-wrap:wrap;
@@ -37,7 +39,7 @@
     .rodape { display:none; }
     .barra { gap:6px; padding:10px 10px calc(10px + env(safe-area-inset-bottom)); }
     button { padding:10px 14px; font-size:13px; }
-    .dica { font-size:12.5px; top:18%; }
+    .dica { font-size:12.5px; top:64px; }
   }
 </style>
 </head>
@@ -49,7 +51,7 @@
   <span>estudo de gelo · feito por código</span>
 </div>
 
-<div class="dica" id="dica">clique no chão para lançar</div>
+<div class="dica" id="dica">clique em qualquer lugar para lançar</div>
 
 <div class="barra">
   <button id="bt-lanca" class="ativo">Torrente de gelo</button>
